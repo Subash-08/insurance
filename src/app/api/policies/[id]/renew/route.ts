@@ -128,7 +128,7 @@ export async function POST(req: Request, { params }: Params) {
 
         await Premium.insertMany(premiumDocs, { session: mongoSession });
 
-        const firstDue = schedule.find((s) => s.status !== "paid")?.dueDate;
+        const firstDue = schedule[0]?.dueDate;
         if (firstDue) {
           await Policy.findByIdAndUpdate(newPolicy._id, { nextPremiumDue: firstDue }, { session: mongoSession });
         }

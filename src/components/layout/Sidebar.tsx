@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, Users, FileText, CreditCard, 
   ShieldAlert, TrendingUp, Bell, BarChart2, 
-  PieChart, Settings, UserCog, LogOut, Lock
+  PieChart, Settings, UserCog, LogOut, Lock,
+  type LucideIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
@@ -15,7 +16,7 @@ import { toast } from 'sonner';
 type NavItem = {
   href: string;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: LucideIcon;
   ownerOnly: boolean;
   section: string;
 };

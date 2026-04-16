@@ -70,17 +70,19 @@ export async function GET(req: Request) {
   };
   const sortOption = sortMap[sort] || { createdAt: -1 };
 
-  let queryBuilder = Policy.find(query)
+  const policyQuery = Policy.find(query)
     .populate("clientId", "fullName phone")
     .populate("insurerId", "name logoUrl type")
-    .populate(user.role === "owner" ? { path: "agentId", select: "name email" } : "")
     .sort(sortOption)
     .skip((page - 1) * limit)
-    .limit(limit)
-    .lean();
+    .limit(limit);
+
+  if (user.role === "owner") {
+    policyQuery.populate({ path: "agentId", select: "name email" });
+  }
 
   const [policies, total] = await Promise.all([
-    queryBuilder,
+    policyQuery.lean(),
     Policy.countDocuments(query),
   ]);
 
@@ -244,8 +246,8 @@ export async function POST(req: Request) {
 
       await Premium.insertMany(premiumDocs, { session: mongoSession });
 
-      // Set nextPremiumDue on policy = first unpaid premium's due date
-      const firstDue = schedule.find((s) => s.status !== "paid")?.dueDate;
+      // Set nextPremiumDue on policy = first premium's due date (all newly generated are unpaid)
+      const firstDue = schedule[0]?.dueDate;
       if (firstDue) {
         await Policy.findByIdAndUpdate(
           policy._id,

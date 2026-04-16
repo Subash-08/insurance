@@ -56,7 +56,6 @@ const InsurerSchema = new Schema<IInsurer>(
 );
 
 // Indexes
-InsurerSchema.index({ name: 1 });
 InsurerSchema.index({ type: 1 });
 InsurerSchema.index({ isActive: 1 });
 

@@ -42,7 +42,8 @@ export async function POST(req: Request, { params }: Params) {
 
   // Validate plan name is unique within this insurer (case-insensitive)
   const duplicate = insurer.plans.find(
-    (p) => p.planName.toLowerCase() === planName.trim().toLowerCase() && p.isActive
+    (p: { planName: string; isActive: boolean }) =>
+      p.planName.toLowerCase() === planName.trim().toLowerCase() && p.isActive
   );
   if (duplicate) {
     return NextResponse.json(

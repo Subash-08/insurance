@@ -109,7 +109,7 @@ UserSchema.methods.addRememberDevice = async function(deviceHash: string) {
   this.rememberDevices.push({ deviceHash, expiresAt });
   
   // Sort by expiresAt desc, keep 5 most recent
-  this.rememberDevices.sort((a, b) => b.expiresAt.getTime() - a.expiresAt.getTime());
+  this.rememberDevices.sort((a: { deviceHash: string; expiresAt: Date }, b: { deviceHash: string; expiresAt: Date }) => b.expiresAt.getTime() - a.expiresAt.getTime());
   if (this.rememberDevices.length > 5) {
     this.rememberDevices = this.rememberDevices.slice(0, 5);
   }

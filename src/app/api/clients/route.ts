@@ -88,14 +88,18 @@ export async function GET(req: Request) {
   };
   const sortOption = sortMap[sort] || { createdAt: -1 };
 
+  const clientQuery = Client.find(query)
+    .select("fullName phone email address tags status createdAt agentId")
+    .sort(sortOption)
+    .skip((page - 1) * limit)
+    .limit(limit);
+
+  if (user.role === "owner") {
+    clientQuery.populate({ path: "agentId", select: "name email" });
+  }
+
   const [clients, total] = await Promise.all([
-    Client.find(query)
-      .select("fullName phone email address tags status createdAt agentId")
-      .populate(user.role === "owner" ? { path: "agentId", select: "name email" } : "")
-      .sort(sortOption)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean(),
+    clientQuery.lean(),
     Client.countDocuments(query),
   ]);
 

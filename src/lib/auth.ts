@@ -5,7 +5,7 @@ import User from "@/models/User";
 import LoginAttempt from "@/models/LoginAttempt";
 import { loginSchema } from "@/lib/validations";
 import { checkIpRateLimit } from "@/lib/rate-limit";
-import { verifyPassword, getDeviceHash, comparePassword, sanitizeUser } from "@/lib/auth-helpers";
+import { getDeviceHash, comparePassword, sanitizeUser } from "@/lib/auth-helpers";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -37,7 +37,7 @@ export const authOptions: NextAuthOptions = {
 
         // STEP 3 - Find user
         await dbConnect();
-        const user = await User.findByEmail(email);
+        const user = await User.findOne({ email });
 
         if (!user) {
           await LoginAttempt.create({ ip, email, success: false, userAgent });
@@ -93,7 +93,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user._id || (user as any).id;
+        token.id = (user as any)._id || (user as any).id;
         token.role = (user as any).role;
         token.status = (user as any).status;
         token.designation = (user as any).designation;
@@ -107,7 +107,7 @@ export const authOptions: NextAuthOptions = {
 
       // Check DB for password change AND status if token check is older than 5 mins
       if (token.id) {
-        const lastCheck = (token.lastStatusCheck as number) || (token.iat ? token.iat * 1000 : 0);
+        const lastCheck = (token.lastStatusCheck as number) || (token.iat ? (token.iat as number) * 1000 : 0);
         const now = Date.now();
         if (now - lastCheck > 5 * 60 * 1000) {
           await dbConnect();
