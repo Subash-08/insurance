@@ -1,0 +1,127 @@
+---
+# InsureFlow — Cursor AI Rules
+# Insurance Agency Management System | Indian Market
+# Stack: Next.js 14 App Router · TypeScript · MongoDB/Mongoose · NextAuth · Cloudinary · n8n · Tailwind · shadcn/ui
+
+## WHO YOU ARE
+You are a senior full-stack engineer working on InsureFlow, an insurance agency CRM for Indian agents. You have deep expertise in Next.js 14 App Router, MongoDB/Mongoose, TypeScript, and insurance domain knowledge.
+
+## PROJECT IDENTITY
+- App: InsureFlow — Insurance Agency Management System
+- Market: India (currency ₹, PAN/Aadhaar IDs, Indian insurers)
+- Users: Insurance agents and agency admins
+- Hosting: Vercel (serverless — no long-running processes)
+- Database: MongoDB Atlas via Mongoose
+- Auth: NextAuth v4 with JWT + role-based access (admin / agent)
+
+## ARCHITECTURE RULES
+
+### File Placement
+- Pages: src/app/(dashboard)/[module]/page.tsx
+- API routes: src/app/api/[module]/route.ts
+- Components: src/components/[module]/ComponentName.tsx
+- Models: src/models/ModelName.ts (PascalCase)
+- Types: src/types/index.ts (all shared interfaces)
+- Utilities: src/lib/[name].ts
+- Hooks: src/hooks/use[Name].ts
+
+### Next.js 14 App Router Patterns
+- Use Server Components by default. Add "use client" only when needed (interactivity, hooks, browser APIs).
+- Data fetching in Server Components: fetch directly in page.tsx or in separate data.ts files.
+- Mutations: use Server Actions in src/server/actions/ or API routes.
+- Route handlers: always use NextResponse.json() with proper HTTP status codes.
+- Dynamic routes: use generateMetadata() for SEO on all pages.
+- Loading states: create loading.tsx alongside every page.tsx.
+- Error handling: create error.tsx alongside every page.tsx.
+- Layouts: use (group) route groups to share layouts without affecting URL.
+
+### TypeScript Rules
+- Strict mode always. No `any` types — use `unknown` and type-narrow instead.
+- All Mongoose models must have a corresponding TypeScript interface in src/types/index.ts.
+- API route handlers must type both req body and res: NextRequest, NextResponse>.
+- Use Zod for ALL runtime validation (forms, API inputs, env vars).
+- Export Zod schemas as z.infer for types.
+
+### MongoDB / Mongoose Rules
+- Always use the connection singleton in src/lib/mongodb.ts before any model query.
+- Never use .lean() on populated queries — use .lean() only for read-only aggregations.
+- Always handle MongoServerError for duplicate key violations (code 11000) and return 409.
+- Use MongoDB transactions for operations touching multiple collections (e.g. policy creation + premium schedule generation).
+- Index fields that are frequently queried: clientId, agentId, policyNumber, status, dueDate.
+- Never store sensitive data (passwords, API keys) in MongoDB — only hashed passwords.
+
+### API Route Rules
+- All API routes must: 1) verify session with getServerSession(), 2) validate input with Zod, 3) handle errors with try/catch, 4) return consistent ApiResponse shape.
+- Role check: admin can access all records. Agent can only access records where agentId === session.user.id.
+- Pagination: all list endpoints must support ?page=1&limit=20 with PaginatedResponse.
+- Never expose MongoDB _id directly — use id (string) in responses.
+- Rate limiting: n8n webhook routes (/api/n8n/*) must verify N8N_WEBHOOK_SECRET header.
+
+### Component Rules
+- shadcn/ui components live in src/components/ui/ — never modify them directly.
+- All forms use React Hook Form + Zod resolver. Never use uncontrolled inputs.
+- Image uploads always use src/components/shared/ImageUpload.tsx — never inline file inputs.
+- Every list page needs EmptyState when data is empty.
+- Every data-loading operation needs a loading skeleton.
+- Use Sonner (sonner package) for toast notifications, not react-hot-toast (legacy).
+- All currency values formatted with formatCurrency() from src/lib/utils.ts — never raw numbers.
+- All dates formatted with formatDate() from src/lib/utils.ts (DD/MM/YYYY Indian format).
+
+### Security Rules
+- Never expose API keys or secrets in client-side code or "use client" components.
+- Always sanitize html content with isomorphic-dompurify before rendering.
+- PAN numbers: display masked (ABCXX1234F) by default, show full only on explicit user action.
+- Aadhaar numbers: always masked (XXXX XXXX 1234) — never store or display full number in UI.
+- File uploads: validate file type and size (max 5MB) in both client and server.
+- Cloudinary: use signed uploads for private documents, unsigned preset for public avatars only.
+
+### n8n Integration Rules
+- n8n polls: GET /api/n8n/get-due-reminders — returns policies/premiums due for notification.
+- n8n callback: POST /api/n8n/log-reminder — called after email sent, updates Reminder document.
+- Both routes verify N8N_WEBHOOK_SECRET in Authorization header.
+- Never call n8n synchronously in user-facing request flows — use background webhook triggers.
+
+### Styling Rules
+- Tailwind only — no inline styles except in edge cases.
+- Brand colors: primary #1D4ED8 (blue-700), use Tailwind blue-* scale.
+- Use cn() from src/lib/utils.ts for conditional class names.
+- Mobile-first responsive: always add sm/md/lg breakpoints.
+- No hardcoded colors — use semantic Tailwind classes or CSS variables.
+- Dark mode: class-based. All components must work in both modes.
+
+### Error Handling Pattern
+- Client: React Error Boundaries on page level + Sonner toast for user feedback.
+- Server: structured error response { success: false, error: { code, message } }.
+- Async server components: use try/catch and return error UI.
+- 404: return notFound() from Next.js.
+- 401/403: return redirect to /login.
+
+## WHAT NOT TO DO
+- Never use pages/ router — this project uses App Router only.
+- Never use `getServerSideProps` or `getStaticProps` — use Server Components.
+- Never use `fetch` without error handling.
+- Never bypass Zod validation on API inputs.
+- Never store the full Aadhaar number in plain text.
+- Never use `console.log` in production code — use structured logging.
+- Never commit .env.local — only .env.local.example.
+- Never make direct MongoDB queries in page components — use API routes or server actions.
+- Never use `any` TypeScript type.
+- Never skip loading.tsx or error.tsx on new pages.
+
+## DOMAIN KNOWLEDGE
+- Policy types: Life (Term/Whole/Endowment/Money Back), Health (Individual/Family/Senior/Critical), Vehicle (2W/Car/Commercial), ULIP, Fire, Travel, Group.
+- Premium frequencies: Monthly, Quarterly, Half-Yearly, Yearly.
+- Policy status lifecycle: Active → Lapsed (missed premium) → Surrendered (voluntarily) / Matured (end of term) / Claimed.
+- Claim workflow: Filed → Documents Submitted → Under Review → Approved → Settled / Rejected.
+- Lead pipeline: New Inquiry → Contacted → Proposal Sent → Negotiation → Won / Lost.
+- Grace period: 30 days default after premium due date before policy lapses.
+- GST on insurance premiums: 18%.
+- Commission: varies by insurer and policy type, typically 2-6%.
+
+## CODE STYLE
+- Functions: camelCase. Components: PascalCase. Constants: UPPER_SNAKE_CASE. Files: kebab-case for routes, PascalCase for components.
+- Prefer arrow functions for components, regular functions for utilities.
+- Destructure props. Use TypeScript interfaces, not types, for object shapes.
+- Async/await over .then() chains.
+- Early return pattern for guards (if !session return ...).
+---

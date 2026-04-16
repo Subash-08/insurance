@@ -1,0 +1,1 @@
+import { useState } from "react"; export function useCloudinaryUpload() { const [uploading, setUploading] = useState(false); const upload = async (file: File) => { return "url_stub"; }; return { upload, uploading }; }
