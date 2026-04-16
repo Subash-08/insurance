@@ -37,7 +37,7 @@ export const authOptions: NextAuthOptions = {
 
         // STEP 3 - Find user
         await dbConnect();
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select('+passwordHash');
 
         if (!user) {
           await LoginAttempt.create({ ip, email, success: false, userAgent });
