@@ -155,8 +155,8 @@ export const authOptions: NextAuthOptions = {
           const AuditLog = (await import('@/models/AuditLog')).default; // Assuming it exists
           await AuditLog.create({
             userId: message.user.id || (message.user as any)._id,
-            action: 'Login',
-            module: 'Auth',
+            action: 'LOGIN',
+            entity: 'Auth',
             details: 'Successful login'
           });
         } catch (e) { console.error('AuditLog error', e); }
@@ -168,8 +168,8 @@ export const authOptions: NextAuthOptions = {
           const AuditLog = (await import('@/models/AuditLog')).default;
           await AuditLog.create({
             userId: message.token.id,
-            action: 'Logout',
-            module: 'Auth',
+            action: 'LOGOUT',
+            entity: 'Auth',
             details: 'User logged out'
           });
         } catch (e) { console.error('AuditLog error', e); }

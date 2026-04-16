@@ -143,7 +143,13 @@ const ClientSchema = new Schema<IClient>(
 
 // Compound indexes for agency-scoped uniqueness
 ClientSchema.index({ agencyId: 1, phone: 1 }, { unique: true });
-ClientSchema.index({ agencyId: 1, panNumber: 1 }, { unique: true, sparse: true });
+ClientSchema.index(
+  { agencyId: 1, panNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { panNumber: { $type: "string" } },
+  }
+);
 ClientSchema.index({ agentId: 1 });
 ClientSchema.index({ agencyId: 1 });
 ClientSchema.index({ isActive: 1 });

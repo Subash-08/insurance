@@ -5,6 +5,7 @@ import dbConnect from "@/lib/mongodb";
 import Policy from "@/models/Policy";
 import Premium from "@/models/Premium";
 import Client from "@/models/Client";
+import "@/models/Insurer"; // register Insurer schema for populate
 import {
   logAudit,
   generatePremiumSchedule,

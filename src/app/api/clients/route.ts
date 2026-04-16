@@ -166,15 +166,27 @@ export async function POST(req: Request) {
       : false,
   }));
 
-  const clientData = {
+  const clientData: Record<string, any> = {
     ...body,
     agentId: user.id,         // NEVER from body
     agencyId,                  // NEVER from body
     nominees: processedNominees,
-    panNumber: body.panNumber?.toUpperCase().trim() || undefined,
-    aadhaarLast4: body.aadhaarLast4 ? String(body.aadhaarLast4).slice(-4) : undefined,
   };
   delete clientData._id;
+
+  // Remove optional indexed fields entirely when absent so the sparse unique
+  // index on (agencyId, panNumber) is not triggered for null values.
+  if (body.panNumber?.trim()) {
+    clientData.panNumber = body.panNumber.toUpperCase().trim();
+  } else {
+    delete clientData.panNumber;
+  }
+
+  if (body.aadhaarLast4) {
+    clientData.aadhaarLast4 = String(body.aadhaarLast4).slice(-4);
+  } else {
+    delete clientData.aadhaarLast4;
+  }
 
   let client;
   try {
