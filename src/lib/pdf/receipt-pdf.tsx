@@ -1,0 +1,128 @@
+import React from "react";
+import { Document, Page, Text, View, StyleSheet, Image, renderToStream } from "@react-pdf/renderer";
+
+// Create styles
+const styles = StyleSheet.create({
+  page: { padding: 30, fontSize: 10, fontFamily: "Helvetica", color: "#333" } as any,
+  header: { flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: "#eee", paddingBottom: 10, marginBottom: 20 } as any,
+  logo: { width: 100 } as any,
+  brandName: { fontSize: 16, fontWeight: "bold", color: "#1D4ED8" } as any,
+  title: { fontSize: 18, fontWeight: "bold", textAlign: "center", marginBottom: 20, color: "#111" } as any,
+  section: { marginBottom: 15 } as any,
+  row: { flexDirection: "row", marginBottom: 5 } as any,
+  label: { width: 120, fontWeight: "bold", color: "#666" } as any,
+  value: { flex: 1 } as any,
+  amountBox: { backgroundColor: "#f8fafc", padding: 15, borderRadius: 4, marginBottom: 20, alignItems: "center", borderWidth: 1, borderColor: "#e2e8f0" } as any,
+  amountText: { fontSize: 24, fontWeight: "bold", color: "#1D4ED8" } as any,
+  divider: { borderBottomWidth: 1, borderBottomColor: "#eee", marginVertical: 15 } as any,
+  footer: { position: "absolute", bottom: 30, left: 30, right: 30, textAlign: "center", fontSize: 8, color: "#888", borderTopWidth: 1, borderTopColor: "#eee", paddingTop: 10 } as any
+});
+
+export interface ReceiptData {
+  agencyName: string;
+  agencyLogo?: string;
+  clientName: string;
+  policyNumber: string;
+  insurerName: string;
+  policyType: string;
+  amount: string; // pre-formatted string (e.g. INR 5,000)
+  paymentDate: string; // pre-formatted
+  paymentMode: string;
+  receiptNumber: string;
+  referenceNumber?: string;
+  agentName: string;
+  agentPhone?: string;
+  nextDueDate?: string;
+}
+
+const ReceiptDocument = ({ data }: { data: ReceiptData }) => (
+  <Document>
+    <Page size="A5" style={styles.page}>
+
+      {/* Header */}
+      <View style={styles.header}>
+        <View>
+          {data.agencyLogo ? (
+            <Image src={data.agencyLogo} style={styles.logo} />
+          ) : (
+            <Text style={styles.brandName}>{data.agencyName}</Text>
+          )}
+        </View>
+        <View style={{ alignItems: "flex-end" }}>
+          <Text style={{ fontWeight: "bold" }}>PREMIUM RECEIPT</Text>
+          <Text style={{ fontSize: 9, marginTop: 4 }}>No: {data.receiptNumber}</Text>
+        </View>
+      </View>
+
+      {/* Main Content */}
+      <View style={styles.amountBox}>
+        <Text style={{ fontSize: 10, marginBottom: 4, color: "#666" }}>Amount Received</Text>
+        <Text style={styles.amountText}>{data.amount}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={{ fontWeight: "bold", fontSize: 12, marginBottom: 8 }}>Received From</Text>
+        <View style={styles.row}>
+          <Text style={styles.label}>Client Name:</Text>
+          <Text style={styles.value}>{data.clientName}</Text>
+        </View>
+      </View>
+
+      <View style={styles.divider} />
+
+      <View style={styles.section}>
+        <Text style={{ fontWeight: "bold", fontSize: 12, marginBottom: 8 }}>Payment Details</Text>
+        <View style={styles.row}>
+          <Text style={styles.label}>Date of Payment:</Text>
+          <Text style={styles.value}>{data.paymentDate}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Payment Mode:</Text>
+          <Text style={styles.value}>{data.paymentMode.toUpperCase()}</Text>
+        </View>
+        {data.referenceNumber && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Reference / Chq No:</Text>
+            <Text style={styles.value}>{data.referenceNumber}</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.divider} />
+
+      <View style={styles.section}>
+        <Text style={{ fontWeight: "bold", fontSize: 12, marginBottom: 8 }}>Policy Details</Text>
+        <View style={styles.row}>
+          <Text style={styles.label}>Insurer:</Text>
+          <Text style={styles.value}>{data.insurerName}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Policy Type:</Text>
+          <Text style={styles.value}>{data.policyType}</Text>
+        </View>
+        <View style={styles.row}>
+          <Text style={styles.label}>Policy Number:</Text>
+          <Text style={styles.value}>{data.policyNumber}</Text>
+        </View>
+        {data.nextDueDate && (
+          <View style={styles.row}>
+            <Text style={styles.label}>Next Due Date:</Text>
+            <Text style={styles.value}>{data.nextDueDate}</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Text>This is a computer-generated receipt.</Text>
+        <Text style={{ marginTop: 4 }}>For queries, contact: {data.agentName} {data.agentPhone ? `(${data.agentPhone})` : ""}</Text>
+        <Text style={{ marginTop: 4 }}>Generated by InsureFlow CRM</Text>
+      </View>
+
+    </Page>
+  </Document>
+);
+
+export async function generateReceiptPDF(data: ReceiptData): Promise<NodeJS.ReadableStream> {
+  return await renderToStream(<ReceiptDocument data={data} />);
+}

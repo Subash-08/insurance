@@ -1,22 +1,61 @@
-import Link from 'next/link';
-import EmptyState from '@/components/shared/EmptyState';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import PremiumsClient from "@/components/premiums/PremiumsClient";
+import PageHeader from "@/components/shared/PageHeader";
+import { formatCurrency } from "@/lib/utils";
+import dbConnect from "@/lib/mongodb";
+import Premium from "@/models/Premium";
 
-export default function PremiumsPage() {
+async function getInitialStats(userId: string, role: string) {
+  await dbConnect();
+
+  const filter: any = {};
+  if (role !== "owner") {
+    filter.agentId = userId;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Directly aggregating overdue total for the subtitle
+  const overdueStats = await Premium.aggregate([
+    {
+      $match: {
+        ...filter,
+        dueDate: { $lt: today },
+        status: { $in: ["due", "overdue", "partially_paid", "ecs_pending"] }
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalBalance: { $sum: "$balanceAmount" }
+      }
+    }
+  ]);
+
+  const overdueTotal = overdueStats[0]?.totalBalance || 0;
+  return overdueTotal;
+}
+
+export default async function PremiumsPage() {
+  const session = await getServerSession(authOptions);
+  if (!session) redirect("/login");
+
+  const overdueTotal = await getInitialStats(session.user.id, session.user.role);
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-lg border border-border shadow-sm">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Premiums</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Track premium collections.</p>
-        </div>
-        <Link href="/premiums/new" className="text-sm font-medium text-white bg-primary px-4 py-2 rounded">
-          Add New
-        </Link>
-      </div>
-      
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-border shadow-sm p-8 flex items-center justify-center">
-         <EmptyState title="No content yet" description="This module is under construction." />
-      </div>
+      <PageHeader
+        title="Premium Tracker"
+        subtitle={
+          overdueTotal > 0
+            ? <span className="text-red-600 font-medium">Total Overdue: {formatCurrency(overdueTotal / 100)}</span>
+            : "All premiums are up to date"
+        }
+      />
+      <PremiumsClient />
     </div>
   );
 }

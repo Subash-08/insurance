@@ -94,6 +94,10 @@ export interface IPolicy extends Document {
     mortalityCharge?: number;
   };
 
+  // ECS Billing
+  ecsEnrolled?: boolean;
+  ecsBank?: string;
+
   // Lifecycle
   renewedFromId?: Types.ObjectId;  // if this is a renewal of another policy
   lapseReason?: string;
@@ -160,6 +164,9 @@ const PolicySchema = new Schema<IPolicy>(
     surrenderValue: { type: Number },
     surrenderDate: { type: Date },
     surrenderReason: { type: String },
+
+    ecsEnrolled: { type: Boolean, default: false },
+    ecsBank: { type: String },
 
     documentUrl: { type: String },
     documentPublicId: { type: String },
