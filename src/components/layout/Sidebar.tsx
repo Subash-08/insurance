@@ -2,9 +2,9 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, Users, FileText, CreditCard, 
-  ShieldAlert, TrendingUp, Bell, BarChart2, 
+import {
+  LayoutDashboard, Users, FileText, CreditCard,
+  ShieldAlert, TrendingUp, Bell, BarChart2,
   PieChart, Settings, UserCog, LogOut, Lock,
   type LucideIcon
 } from 'lucide-react';
@@ -24,19 +24,19 @@ type NavItem = {
 const NAV_CONFIG: NavItem[] = [
   // Main
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, ownerOnly: false, section: 'Main' },
-  
+
   // Operations
   { href: '/clients', label: 'Clients', icon: Users, ownerOnly: false, section: 'Operations' },
   { href: '/policies', label: 'Policies', icon: FileText, ownerOnly: false, section: 'Operations' },
   { href: '/premiums', label: 'Premiums', icon: CreditCard, ownerOnly: false, section: 'Operations' },
   { href: '/claims', label: 'Claims', icon: ShieldAlert, ownerOnly: false, section: 'Operations' },
   { href: '/leads', label: 'Leads', icon: TrendingUp, ownerOnly: false, section: 'Operations' },
-  
+
   // Tools
   { href: '/reminders', label: 'Reminders', icon: Bell, ownerOnly: false, section: 'Tools' },
   { href: '/reports', label: 'Reports', icon: BarChart2, ownerOnly: false, section: 'Tools' },
-  { href: '/reports/analytics', label: 'Analytics', icon: PieChart, ownerOnly: true, section: 'Tools' },
-  
+  // { href: '/reports/analytics', label: 'Analytics', icon: PieChart, ownerOnly: true, section: 'Tools' },
+
   // Admin
   { href: '/settings/profile', label: 'Settings', icon: Settings, ownerOnly: false, section: 'Admin' },
   // Team is special, entirely hidden if not owner. The others are displayed with locks.
@@ -59,7 +59,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsO
     <>
       {/* Mobile Backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
@@ -73,7 +73,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsO
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex-1 flex flex-col overflow-y-auto pt-5 pb-4">
-          
+
           <div className="flex items-center px-6 mb-6">
             <div className="w-8 h-8 bg-primary text-white flex items-center justify-center rounded-md font-bold text-lg mr-2">I</div>
             <span className="text-xl font-bold text-gray-900 dark:text-white">InsureFlow</span>
@@ -93,7 +93,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsO
                 </h3>
                 <div className="space-y-1">
                   {NAV_CONFIG.filter(item => item.section === section).map(item => {
-                    const isActive = pathname.startsWith(item.href) && (item.href !== '/settings/profile' || pathname === '/settings/profile'); 
+                    const isActive = pathname.startsWith(item.href) && (item.href !== '/settings/profile' || pathname === '/settings/profile');
                     const Icon = item.icon;
                     const restricted = item.ownerOnly && !isOwner;
 
@@ -105,13 +105,12 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsO
                           if (restricted) handleRestrictedClick(e);
                           else setIsOpen(false);
                         }}
-                        className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md relative ${
-                          isActive
+                        className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md relative ${isActive
                             ? 'bg-primary text-white'
                             : restricted
-                            ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
-                        }`}
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                          }`}
                         title={restricted ? "Owner access required" : item.label}
                       >
                         {isActive && !restricted && <div className="absolute left-0 top-0 bottom-0 w-1 bg-white dark:bg-gray-300 rounded-r-md"></div>}
@@ -127,14 +126,13 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsO
                       <Link
                         href="/settings/team"
                         onClick={() => setIsOpen(false)}
-                        className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${
-                          pathname.startsWith('/settings/team')
+                        className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md ${pathname.startsWith('/settings/team')
                             ? 'bg-primary text-white'
                             : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
-                        }`}
+                          }`}
                       >
-                         <UserCog className={`mr-3 h-5 w-5 flex-shrink-0 ${pathname.startsWith('/settings/team') ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}`} />
-                         Team Management
+                        <UserCog className={`mr-3 h-5 w-5 flex-shrink-0 ${pathname.startsWith('/settings/team') ? 'text-white' : 'text-gray-400 group-hover:text-gray-500'}`} />
+                        Team Management
                       </Link>
                     </OwnerOnly>
                   )}
@@ -154,7 +152,7 @@ export default function Sidebar({ isOpen, setIsOpen }: { isOpen: boolean, setIsO
               <p className="text-sm font-medium text-gray-700 dark:text-gray-200 truncate">{session?.user?.name || 'User'}</p>
               <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{session?.user?.email || ''}</p>
             </div>
-            <button 
+            <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               className="ml-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               title="Sign out"

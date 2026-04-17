@@ -188,8 +188,10 @@ export async function PATCH(
     // Audit Log
     await AuditLog.create({
       userId: session.user.id,
-      action: "Updated",
-      module: "Premium",
+      userRole: session.user.role,
+      action: "UPDATE",
+      entity: "Premium",
+      entityId: savedPremium._id,
       details: `Recorded payment of ₹${data.amount / 100} for premium ${savedPremium._id}`,
       ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
       userAgent: req.headers.get("user-agent") ?? "unknown",

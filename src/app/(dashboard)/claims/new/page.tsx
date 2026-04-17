@@ -1,22 +1,21 @@
-import Link from 'next/link';
-import EmptyState from '@/components/shared/EmptyState';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import FileClaimWizard from "@/components/claims/FileClaimWizard";
 
-export default function FileClaimPage() {
+export const metadata = { title: "File New Claim — InsureFlow" };
+
+export default async function NewClaimPage() {
+  const session = await getServerSession(authOptions);
+  if (!session) redirect("/login");
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-lg border border-border shadow-sm">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">File Claim</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Initiate a new claim.</p>
-        </div>
-        <Link href="/claims" className="text-sm font-medium text-primary border border-primary px-4 py-2 rounded">
-          Back
-        </Link>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">File New Claim</h1>
+        <p className="text-sm text-gray-500 mt-1">Complete all steps to file a claim with us</p>
       </div>
-      
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-border shadow-sm p-8 flex items-center justify-center">
-         <EmptyState title="No content yet" description="This module is under construction." />
-      </div>
+      <FileClaimWizard />
     </div>
   );
 }

@@ -1,14 +1,42 @@
-import React from 'react';
-import dbConnect from '@/lib/mongodb';
-import User from '@/models/User';
-import Link from 'next/link';
+"use client";
 
-export default async function OwnerDashboard({ session }: { session: any }) {
-  await dbConnect();
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { Users, FileText, AlertCircle, FileCheck, CircleDollarSign } from "lucide-react";
+import KpiCard from "./KpiCard";
+import ActionPanel from "./ActionPanel";
+import RevenueTargetWidget from "./RevenueTargetWidget";
+import CrossSellWidget from "./CrossSellWidget";
+import AgencyPerformanceTable from "./AgencyPerformanceTable";
+import dynamic from "next/dynamic";
 
-  // Basic stats fetch
-  const pendingCount = await User.countDocuments({ role: 'employee', status: 'pending_approval' });
-  const activeEmployees = await User.countDocuments({ role: 'employee', status: 'active' });
+const PremiumCollectionChart = dynamic(() => import("./PremiumCollectionChart"), { ssr: false });
+const PolicyTypeChart = dynamic(() => import("./PolicyTypeChart"), { ssr: false });
+const NewClientsChart = dynamic(() => import("./NewClientsChart"), { ssr: false });
+
+function formatRupees(paise: number) {
+  const rupees = paise / 100;
+  if (rupees >= 100000) return `₹${+(rupees / 100000).toFixed(2)}L`;
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(rupees);
+}
+
+export default function OwnerDashboard({ session }: { session: any }) {
+  const [stats, setStats] = useState<any>(null);
+  const [actions, setActions] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [loadingActions, setLoadingActions] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/dashboard/stats")
+      .then(res => res.json())
+      .then(d => { if (d.success) setStats(d.data); })
+      .finally(() => setLoadingStats(false));
+
+    fetch("/api/dashboard/actions")
+      .then(res => res.json())
+      .then(d => { if (d.success) setActions(d.data); })
+      .finally(() => setLoadingActions(false));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -16,71 +44,150 @@ export default async function OwnerDashboard({ session }: { session: any }) {
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Agency Overview</h1>
       </div>
 
-      {pendingCount > 0 && (
-        <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-md flex justify-between items-center">
-          <div className="text-amber-800">
-            <span className="font-semibold">Review Required:</span> You have {pendingCount} pending employee registration(s) awaiting approval.
+      {stats?.pendingApprovals > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border-l-4 border-amber-500 p-4 rounded-md flex justify-between items-center shadow-sm">
+          <div className="text-amber-800 dark:text-amber-300 text-sm">
+            <span className="font-semibold">Review Required:</span> You have {stats.pendingApprovals} pending employee registration(s).
           </div>
-          <Link href="/settings/team" className="text-sm font-medium bg-amber-100 hover:bg-amber-200 text-amber-900 px-3 py-1.5 rounded-md transition-colors">
+          <Link href="/settings/team" className="text-sm font-medium bg-amber-100 hover:bg-amber-200 dark:bg-amber-800/40 dark:hover:bg-amber-800/60 dark:text-amber-100 text-amber-900 px-3 py-1.5 rounded-md transition-colors">
             Review Now
           </Link>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Placeholder cards to satisfy prompt shape for OwnerDashboard without having full underlying models active yet */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-          <p className="text-sm font-medium text-gray-500">Total Active Clients</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">142</p>
-          <p className="text-xs text-green-600 mt-1">Agency wide</p>
+      {/* Revenue Target Widget */}
+      <RevenueTargetWidget collectedThisMonth={stats?.kpis?.premiumCollectedThisMonth?.current ?? 0} />
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard
+          title="Total Active Clients"
+          value={loadingStats ? "..." : String(stats?.kpis?.activeClients?.current ?? 0)}
+          icon={Users}
+          trend={stats?.kpis?.activeClients?.trend}
+          color="blue"
+          href="/clients"
+          loading={loadingStats}
+        />
+        <KpiCard
+          title="Active Policies"
+          value={loadingStats ? "..." : String(stats?.kpis?.activePolicies?.current ?? 0)}
+          icon={FileText}
+          trend={stats?.kpis?.activePolicies?.trend}
+          color="green"
+          href="/policies"
+          loading={loadingStats}
+        />
+        <KpiCard
+          title="Premium This Month"
+          value={loadingStats ? "..." : formatRupees(stats?.kpis?.premiumCollectedThisMonth?.current ?? 0)}
+          icon={CircleDollarSign}
+          trend={stats?.kpis?.premiumCollectedThisMonth?.trend}
+          color="teal"
+          loading={loadingStats}
+          subtitle={`Efficiency: ${stats?.kpis?.collectionEfficiency?.current ?? 0}%`}
+        />
+        <KpiCard
+          title="Overdue Premiums"
+          value={loadingStats ? "..." : String(stats?.kpis?.overdueCount?.current ?? 0)}
+          icon={AlertCircle}
+          trend={stats?.kpis?.overdueCount?.trend}
+          reverseTrend
+          color="red"
+          href="/premiums"
+          loading={loadingStats}
+          subtitle={stats?.kpis?.overdueAmount?.current ? `${formatRupees(stats?.kpis?.overdueAmount?.current)} total` : "Action required"}
+        />
+      </div>
+
+      {/* Overdue Strip */}
+      {stats?.kpis?.overdueCount?.current > 0 && (
+        <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded-md">
+          <p className="text-red-800 dark:text-red-300 text-sm font-medium">
+            Attention: {stats.kpis.overdueCount.current} premiums are currently overdue, totaling {formatRupees(stats.kpis.overdueAmount.current)}.
+          </p>
         </div>
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-          <p className="text-sm font-medium text-gray-500">Active Policies</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">315</p>
+      )}
+
+      {/* Action Panels Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <ActionPanel
+          title="Renewals This Week"
+          items={actions?.renewalsThisWeek ?? []}
+          emptyMessage="No policies expiring in the next 7 days."
+          loading={loadingActions}
+          viewAllHref="/policies?filter=expiring"
+        />
+        <ActionPanel
+          title="Top 5 Defaulters"
+          items={(stats?.topDefaulters ?? []).map((d: any) => ({
+            id: d._id || d.clientId,
+            type: "overdue" as const,
+            clientName: d.clientName,
+            clientId: d.clientId,
+            clientPhone: d.clientPhone,
+            policyNumber: d.policyNumber,
+            amount: d.balanceAmount,
+            daysOverdue: d.daysOverdue,
+          }))}
+          emptyMessage="No overdue premiums!"
+          loading={loadingStats}
+          viewAllHref="/premiums?filter=overdue"
+        />
+        <ActionPanel
+          title="Today's Birthdays"
+          items={actions?.todayBirthdays ?? []}
+          emptyMessage="No birthdays today."
+          loading={loadingActions}
+          viewAllHref="/clients"
+        />
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <PremiumCollectionChart />
         </div>
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-          <p className="text-sm font-medium text-gray-500">Premium This Month</p>
-          <p className="text-3xl font-bold text-gray-900 mt-2">₹4.2L</p>
-        </div>
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-          <p className="text-sm font-medium text-gray-500">Expiring in 30 Days</p>
-          <p className="text-3xl font-bold text-amber-600 mt-2">12</p>
+        <div>
+          <PolicyTypeChart />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-           <h2 className="text-lg font-bold text-gray-900 mb-4">Agency Performance</h2>
-           <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg text-gray-400 border border-dashed">
-              [ Stacked Bar Chart Placeholder ]
-           </div>
-        </div>
-        
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-           <div className="flex justify-between items-center mb-4">
-               <h2 className="text-lg font-bold text-gray-900">Active Team ({activeEmployees})</h2>
-               <Link href="/settings/team" className="text-sm text-primary hover:underline">Manage Team</Link>
-           </div>
-           
-           <div className="space-y-4">
-              {/* Fake row for demo representation */}
-              <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
-                 <div className="flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">E</div>
-                    <div className="ml-3">
-                       <p className="text-sm font-medium text-gray-900">Example Employee</p>
-                       <p className="text-xs text-gray-500">Senior Agent</p>
-                    </div>
-                 </div>
-                 <div className="text-right">
-                    <p className="text-sm font-bold text-gray-900">24 Clients</p>
-                    <p className="text-xs text-green-600">₹1.1L this month</p>
-                 </div>
-              </div>
-           </div>
-        </div>
+      {/* New Clients Chart */}
+      <NewClientsChart />
+
+      {/* Cross-Sell */}
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white pt-4">Cross-Sell Opportunities</h2>
+      <CrossSellWidget />
+
+      {/* Agency Performance */}
+      <div className="pt-4">
+        <AgencyPerformanceTable agents={stats?.agentPerformance ?? []} />
       </div>
 
+      {/* Upcoming Maturities */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+        <ActionPanel
+          title="Upcoming Maturities (90 Days)"
+          items={actions?.upcomingMaturities ?? []}
+          emptyMessage="No policies maturing soon."
+          loading={loadingActions}
+        />
+        <ActionPanel
+          title="Missed Follow-ups"
+          items={(actions?.missedFollowups ?? []).map((l: any) => ({
+            id: l._id,
+            clientId: l.clientId?._id,
+            clientName: l.clientId?.fullName,
+            clientPhone: l.clientId?.phone,
+            dueDate: l.followUpDate,
+            type: "followup" as const,
+          }))}
+          emptyMessage="Great! No missed follow-ups."
+          loading={loadingActions}
+          viewAllHref="/leads"
+        />
+      </div>
     </div>
   );
 }

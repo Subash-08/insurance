@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed:admin": "ts-node --project tsconfig.server.json src/server/scripts/seed-admin.ts"
+    "seed:admin": "ts-node --project tsconfig.server.json src/server/scripts/seed-admin.ts",
+    "seed:templates": "npx tsx src/server/scripts/seed-email-templates.ts"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
