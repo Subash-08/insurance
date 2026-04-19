@@ -18,6 +18,7 @@ export interface IInsurer extends Document {
   website?: string;
   plans: IInsurerPlan[];
   isActive: boolean;
+  commissionRates?: Map<string, number>; // Map of policy type -> commission percentage
   deletedAt?: Date;
   createdBy?: Types.ObjectId;
   createdAt: Date;
@@ -49,6 +50,7 @@ const InsurerSchema = new Schema<IInsurer>(
     website: { type: String },
     plans: { type: [PlanSchema], default: [] },
     isActive: { type: Boolean, default: true },
+    commissionRates: { type: Map, of: Number, default: {} },
     deletedAt: { type: Date },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },

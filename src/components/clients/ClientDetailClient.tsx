@@ -8,6 +8,7 @@ import { Edit2, Share2, Trash2, Phone, Mail, MapPin, Tag } from 'lucide-react';
 import HealthScoreBadge from '@/components/shared/HealthScoreBadge';
 import StatusBadge from '@/components/shared/StatusBadge';
 import CurrencyDisplay from '@/components/shared/CurrencyDisplay';
+import DocumentUploadModal from '@/components/documents/DocumentUploadModal';
 
 interface ClientDetailProps {
   clientId: string;
@@ -19,7 +20,10 @@ export default function ClientDetailClient({ clientId, userRole, userId }: Clien
   const router = useRouter();
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'policies' | 'premiums' | 'claims' | 'notes'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'policies' | 'premiums' | 'claims' | 'notes' | 'documents'>('overview');
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const fetchClient = useCallback(async () => {
     try {
@@ -37,9 +41,29 @@ export default function ClientDetailClient({ clientId, userRole, userId }: Clien
     }
   }, [clientId, router]);
 
+  const fetchDocs = useCallback(async () => {
+    if (activeTab !== 'documents') return;
+    setLoadingDocs(true);
+    try {
+      const res = await fetch(`/api/documents?entityType=Client&entityId=${clientId}`);
+      const data = await res.json();
+      if (data.success) {
+        setDocuments(data.data);
+      }
+    } catch {
+      toast.error('Failed to load documents');
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [clientId, activeTab]);
+
   useEffect(() => {
     fetchClient();
   }, [fetchClient]);
+
+  useEffect(() => {
+    fetchDocs();
+  }, [fetchDocs]);
 
   const handleDelete = async () => {
     if (!confirm(`Are you sure you want to deactivate ${client.fullName}?`)) return;
@@ -129,6 +153,7 @@ export default function ClientDetailClient({ clientId, userRole, userId }: Clien
           { id: 'policies', label: 'Policies' },
           { id: 'premiums', label: 'Premiums' },
           { id: 'claims', label: 'Claims' },
+          { id: 'documents', label: 'Documents' },
           { id: 'notes', label: 'Notes' },
         ].map((tab) => (
           <button
@@ -200,6 +225,60 @@ export default function ClientDetailClient({ clientId, userRole, userId }: Clien
         {activeTab === 'premiums' && <div className="text-center py-20 text-gray-400">Premiums logic will display here.</div>}
         {activeTab === 'claims' && <div className="text-center py-20 text-gray-400">Claims logic will display here.</div>}
         {activeTab === 'notes' && <div className="text-center py-20 text-gray-400">Notes logic will display here.</div>}
+        
+        {activeTab === 'documents' && (
+          <div className="space-y-6">
+             <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900 border border-border p-4 rounded-xl shadow-sm">
+                <div>
+                   <h3 className="font-semibold text-gray-900 dark:text-white">Uploaded Documents</h3>
+                   <p className="text-sm text-gray-500">Manage identity, address, and medical records.</p>
+                </div>
+                <button 
+                  onClick={() => setIsUploadModalOpen(true)}
+                  className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded shadow-sm text-sm font-medium transition"
+                >
+                   Upload Document
+                </button>
+             </div>
+             
+             <DocumentUploadModal 
+               isOpen={isUploadModalOpen} 
+               onClose={() => setIsUploadModalOpen(false)} 
+               entityType="Client" 
+               entityId={clientId} 
+               onUploadSuccess={fetchDocs} 
+             />
+             
+             {loadingDocs ? (
+               <div className="text-center py-12 text-gray-500">Loading documents...</div>
+             ) : documents.length === 0 ? (
+               <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 bg-gray-50 dark:bg-gray-800/50">
+                  <p>No documents uploaded yet.</p>
+               </div>
+             ) : (
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {documents.map(doc => (
+                     <div key={doc._id} className="border border-border rounded-xl p-4 flex flex-col justify-between bg-white dark:bg-gray-800 shadow-sm relative group">
+                        <div>
+                           <div className="flex items-start justify-between mb-2">
+                             <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate pr-2">{doc.fileName}</h4>
+                             <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{doc.documentType}</span>
+                           </div>
+                           <p className="text-xs text-gray-500 font-medium">Added: {new Date(doc.createdAt).toLocaleDateString()}</p>
+                           <p className="text-xs text-gray-500 font-medium">Size: {(doc.sizeBytes / 1024 / 1024).toFixed(2)} MB</p>
+                        </div>
+                        <div className="mt-4 flex gap-2">
+                           <a href={doc.cloudinaryUrl} target="_blank" rel="noreferrer" className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-center py-2 rounded text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                              Open File
+                           </a>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+             )}
+          </div>
+        )}
+
       </div>
     </div>
   );

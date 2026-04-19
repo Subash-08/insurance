@@ -99,8 +99,8 @@ export async function PATCH(
 
     await AuditLog.create({
       userId: session.user.id,
-      action: "Updated",
-      module: "Premium",
+      action: "UPDATE",
+      entity: "Premium",
       details: `Recorded ECS status ${data.status} for premium ${savedPremium._id}. Reason: ${data.reason || "N/A"}`,
       ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
       userAgent: req.headers.get("user-agent") ?? "unknown",

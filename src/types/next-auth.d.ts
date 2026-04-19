@@ -8,6 +8,7 @@ declare module "next-auth" {
       role: 'owner' | 'employee';
       status: 'pending_approval' | 'active' | 'suspended' | 'rejected';
       designation?: string;
+      agencyId?: string;
     } & DefaultSession["user"];
   }
 
@@ -16,6 +17,7 @@ declare module "next-auth" {
     role: 'owner' | 'employee';
     status: 'pending_approval' | 'active' | 'suspended' | 'rejected';
     designation?: string;
+    agencyId?: string;
   }
 }
 
@@ -25,6 +27,8 @@ declare module "next-auth/jwt" {
     role: 'owner' | 'employee';
     status: 'pending_approval' | 'active' | 'suspended' | 'rejected';
     designation?: string;
+    agencyId?: string;
     passwordChangedAt?: number;
+    lastStatusCheck?: number;
   }
 }

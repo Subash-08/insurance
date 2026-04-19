@@ -12,6 +12,7 @@ export async function createCommissionLogEntry(params: {
   policyId: mongoose.Types.ObjectId | string;
   clientId: mongoose.Types.ObjectId | string;
   agentId: mongoose.Types.ObjectId | string;
+  agencyId: mongoose.Types.ObjectId | string;
   insurerId: mongoose.Types.ObjectId | string;
   policyType: string;
   paidAmount: number;
@@ -44,6 +45,7 @@ export async function createCommissionLogEntry(params: {
       policyId: new mongoose.Types.ObjectId(params.policyId),
       clientId: new mongoose.Types.ObjectId(params.clientId),
       agentId: new mongoose.Types.ObjectId(params.agentId),
+      agencyId: new mongoose.Types.ObjectId(params.agencyId),
       insurerId: new mongoose.Types.ObjectId(params.insurerId),
       policyType: params.policyType,
       paidAmount: params.paidAmount,

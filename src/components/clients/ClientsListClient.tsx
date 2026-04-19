@@ -225,7 +225,7 @@ export default function ClientsListClient({
                           View
                         </Link>
                         <Link
-                          href={`/clients/${client._id}/edit`}
+                          href={`/clients/${client._id}`}
                           className="text-xs text-gray-500 hover:text-gray-700 font-medium"
                         >
                           Edit

@@ -160,6 +160,7 @@ export async function PATCH(
         policyId: savedPremium.policyId,
         clientId: savedPremium.clientId,
         agentId: savedPremium.agentId,
+        agencyId: session.user.agencyId || session.user.id,
         insurerId: policy.insurerId,
         policyType: policy.type,
         paidAmount: data.amount, // Commission generated solely off THIS delta

@@ -96,8 +96,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       const AuditLog = (await import('@/models/AuditLog')).default;
       await AuditLog.create({
         userId: ownerId,
-        action: 'StatusChanged',
-        module: 'User',
+        action: "STATUS_CHANGE",
+        entity: 'User',
         details: `Employee \${user.name} status changed from \${currentStatus} to \${user.status}`
       });
     } catch {}
@@ -149,8 +149,8 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       const AuditLog = (await import('@/models/AuditLog')).default;
       await AuditLog.create({
         userId: ownerId,
-        action: 'EmployeeDeleted',
-        module: 'User',
+        action: "DELETE",
+        entity: 'User',
         details: `Employee \${user.name} soft-deleted.`
       });
     } catch {}

@@ -47,6 +47,11 @@ export async function middleware(req: NextRequest) {
     return addSecurityHeaders(NextResponse.next());
   }
 
+  // 4.5. ALLOW: public shared document links
+  if (pathname.startsWith('/api/shared/') || pathname.startsWith('/shared/')) {
+    return addSecurityHeaders(NextResponse.next());
+  }
+
   // 5. PUBLIC ASSET CHECK
   if (pathname.startsWith('/_next/') || pathname.includes('/favicon') || pathname.startsWith('/public/')) {
     return NextResponse.next();

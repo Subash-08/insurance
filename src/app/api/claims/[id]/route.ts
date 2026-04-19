@@ -93,8 +93,8 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     await AuditLog.create({
       userId: session.user.id,
-      action: "Deleted",
-      module: "Claim",
+      action: "DELETE",
+      entity: "Claim",
       details: `Owner soft-deleted claim ${claim.claimNumber}`,
       ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
       userAgent: req.headers.get("user-agent") ?? "unknown",

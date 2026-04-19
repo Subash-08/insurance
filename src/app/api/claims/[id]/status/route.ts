@@ -50,8 +50,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
     await AuditLog.create({
       userId: session.user.id,
-      action: "Updated",
-      module: "Claim",
+      action: "UPDATE",
+      entity: "Claim",
       details: `Status changed from '${claim.status}' to '${newStatus}' on claim ${claim.claimNumber}`,
       ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
       userAgent: req.headers.get("user-agent") ?? "unknown",

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   await dbConnect();
   try {
-    const settings = await ReminderSettings.findOne().select("monthlyRevenueTarget").lean();
+    const settings = await ReminderSettings.findOne().select("monthlyRevenueTarget").lean() as any;
     return NextResponse.json({ success: true, data: { monthlyRevenueTarget: (settings as any)?.monthlyRevenueTarget ?? 0 } });
   } catch (err) {
     console.error("[TARGET_GET]", err);

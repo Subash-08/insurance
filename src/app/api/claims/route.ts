@@ -161,8 +161,9 @@ export async function POST(req: NextRequest) {
     // ── Audit Log ──────────────────────────────────────────────────────────────
     await AuditLog.create({
       userId: session.user.id,
-      action: "Created",
-      module: "Claim",
+      action: "CREATE",
+      entity: "Claim",
+      entityId: claim._id,
       details: `Filed claim ${claim.claimNumber} for policy ${policy.policyNumber}`,
       ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
       userAgent: req.headers.get("user-agent") ?? "unknown",

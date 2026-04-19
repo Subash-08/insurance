@@ -64,8 +64,8 @@ export async function POST(req: NextRequest) {
 
           await AuditLog.create({
             userId: session.user.id,
-            action: "Updated",
-            module: "Premium",
+            action: "UPDATE",
+            entity: "Premium",
             details: `Admin repaired state drift. Paid: ${originalAmount}->${p.paidAmount}, Bal: ${originalBalance}->${p.balanceAmount}, Status: ${originalStatus}->${p.status}`,
             ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
             userAgent: req.headers.get("user-agent") ?? "unknown",

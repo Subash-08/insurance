@@ -46,8 +46,8 @@ export async function POST(req: NextRequest) {
 
     await AuditLog.create({
       userId: session.user.id,
-      action: "Created",
-      module: "Reminder",
+      action: "CREATE",
+      entity: "Reminder",
       details: `Manual reminder sent: template=${templateSlug}, channel=${channel}`,
       ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
       userAgent: req.headers.get("user-agent") ?? "unknown",

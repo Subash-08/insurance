@@ -8,9 +8,13 @@
     "start": "next start",
     "lint": "next lint",
     "seed:admin": "ts-node --project tsconfig.server.json src/server/scripts/seed-admin.ts",
-    "seed:templates": "npx tsx src/server/scripts/seed-email-templates.ts"
+    "seed:templates": "npx tsx src/server/scripts/seed-email-templates.ts",
+    "db:add-indexes": "npx tsx scripts/add-indexes.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@hookform/resolvers": "3.9.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
@@ -21,6 +25,7 @@
     "cloudinary": "2.9.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
     "dotenv": "^17.4.2",
     "framer-motion": "12.34.3",
     "isomorphic-dompurify": "^2.13.0",

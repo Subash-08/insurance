@@ -6,6 +6,7 @@ export interface ICommissionLog extends Document {
   policyId: Types.ObjectId;
   clientId: Types.ObjectId;
   agentId: Types.ObjectId;
+  agencyId: Types.ObjectId;
   insurerId: Types.ObjectId;
   policyType: string;
   paidAmount: number; // in paise, what commission was actually calculated on
@@ -25,6 +26,7 @@ const CommissionLogSchema = new Schema<ICommissionLog>(
     policyId: { type: Schema.Types.ObjectId, ref: "Policy", required: true },
     clientId: { type: Schema.Types.ObjectId, ref: "Client", required: true },
     agentId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    agencyId: { type: Schema.Types.ObjectId, ref: "Agency", required: true },
     insurerId: { type: Schema.Types.ObjectId, ref: "Insurer", required: true },
     policyType: { type: String, required: true },
     paidAmount: { type: Number, required: true },

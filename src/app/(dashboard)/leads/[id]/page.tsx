@@ -1,22 +1,47 @@
-import Link from 'next/link';
-import EmptyState from '@/components/shared/EmptyState';
+import React from "react";
+import dbConnect from "@/lib/mongodb";
+import Lead from "@/models/Lead";
+import { getRequiredSession } from "@/lib/session";
+import { checkOwnership } from "@/lib/data-filter";
+import { redirect } from "next/navigation";
+import LeadDetailClient from "./LeadDetailClient";
+import { Metadata } from "next";
 
-export default function LeadDetailsPage() {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-lg border border-border shadow-sm">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Lead Details</h1>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">View lead specifics.</p>
-        </div>
-        <Link href="/leads" className="text-sm font-medium text-primary border border-primary px-4 py-2 rounded">
-          Back
-        </Link>
-      </div>
-      
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-border shadow-sm p-8 flex items-center justify-center">
-         <EmptyState title="No content yet" description="This module is under construction." />
-      </div>
-    </div>
-  );
+export const metadata: Metadata = {
+  title: "Lead Details | InsureFlow",
+};
+
+export default async function LeadDetailPage({ params }: { params: { id: string } }) {
+  const session = await getRequiredSession();
+  await dbConnect();
+
+  const rawLead = await Lead.findOne({ _id: params.id, isActive: true }).lean() as any;
+
+  if (!rawLead || !checkOwnership(rawLead as any, session)) {
+    redirect("/leads");
+  }
+
+  // Convert ObjectIds to strings to avoid passing non-serializable objects to Client component
+  const lead = {
+    ...rawLead,
+    _id: rawLead._id.toString(),
+    agentId: rawLead.agentId?.toString(),
+    agencyId: rawLead.agencyId?.toString(),
+    referredByClientId: rawLead.referredByClientId?.toString() || null,
+    wonClientId: rawLead.wonClientId?.toString() || null,
+    createdAt: rawLead.createdAt?.toISOString(),
+    updatedAt: rawLead.updatedAt?.toISOString(),
+    lastContactedAt: rawLead.lastContactedAt?.toISOString() || null,
+    nextFollowUpDate: rawLead.nextFollowUpDate?.toISOString() || null,
+    convertedAt: rawLead.convertedAt?.toISOString() || null,
+    followUpNotes: rawLead.followUpNotes?.map((note: any) => ({
+      ...note,
+      _id: note._id?.toString(),
+      addedBy: note.addedBy?.toString(),
+      addedAt: note.addedAt?.toISOString(),
+      nextFollowUpDate: note.nextFollowUpDate?.toISOString() || null,
+    })) || [],
+  };
+
+  return <LeadDetailClient lead={lead} />;
 }

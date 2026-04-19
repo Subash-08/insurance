@@ -97,3 +97,10 @@ export async function sendWhatsAppApiMessage(
 
   return { success: false, reason: "Unknown WHATSAPP_PROVIDER" };
 }
+
+/** Convenience alias — opens a WhatsApp deep link in a new tab (browser-only) */
+export function openWhatsApp(phone: string, message: string): void {
+  if (typeof window === "undefined") return;
+  const url = generateWaLink(phone, message);
+  if (url) window.open(url, "_blank");
+}

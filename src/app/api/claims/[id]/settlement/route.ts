@@ -91,8 +91,8 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     await AuditLog.create({
       userId: session.user.id,
-      action: "Updated",
-      module: "Claim",
+      action: "UPDATE",
+      entity: "Claim",
       details: `Settlement recorded for claim ${claim.claimNumber}. Amount: ₹${settlementAmount / 100}. Partial: ${isPartial}`,
       ipAddress: req.headers.get("x-forwarded-for") ?? "unknown",
       userAgent: req.headers.get("user-agent") ?? "unknown",

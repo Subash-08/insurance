@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       await AuditLog.create({
         userId: user._id,
         action: 'PasswordReset',
-        module: 'Auth',
+        entity: 'Auth',
         details: 'User reset password via token'
       });
     } catch (e) {

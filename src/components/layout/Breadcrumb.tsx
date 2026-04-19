@@ -42,7 +42,7 @@ export default function Breadcrumb() {
         </li>
         {segments.map((segment, index) => {
           const isLast = index === segments.length - 1;
-          const href = `/\${segments.slice(0, index + 1).join('/')}`;
+          const href = `/${segments.slice(0, index + 1).join('/')}`;
           
           // Handle dynamic [id] segments roughly (if it's a mongoid length or completely numbers)
           const isId = segment.length > 20 || /^\d+$/.test(segment);
@@ -51,7 +51,7 @@ export default function Breadcrumb() {
           return (
             <li key={segment} className="flex flex-row items-center space-x-2">
               <ChevronRight size={16} className="text-gray-400" />
-              {isLast || isId ? (
+              {isLast ? (
                 <span className="text-sm font-medium text-gray-500 max-w-[150px] truncate" aria-current="page">
                   {label}
                 </span>

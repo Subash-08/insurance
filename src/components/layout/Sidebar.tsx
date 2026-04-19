@@ -6,6 +6,7 @@ import {
   LayoutDashboard, Users, FileText, CreditCard,
   ShieldAlert, TrendingUp, Bell, BarChart2,
   PieChart, Settings, UserCog, LogOut, Lock,
+  FolderOpen,
   type LucideIcon
 } from 'lucide-react';
 import Link from 'next/link';
@@ -33,6 +34,7 @@ const NAV_CONFIG: NavItem[] = [
   { href: '/leads', label: 'Leads', icon: TrendingUp, ownerOnly: false, section: 'Operations' },
 
   // Tools
+  { href: '/documents', label: 'Documents', icon: FolderOpen, ownerOnly: false, section: 'Tools' },
   { href: '/reminders', label: 'Reminders', icon: Bell, ownerOnly: false, section: 'Tools' },
   { href: '/reports', label: 'Reports', icon: BarChart2, ownerOnly: false, section: 'Tools' },
   // { href: '/reports/analytics', label: 'Analytics', icon: PieChart, ownerOnly: true, section: 'Tools' },

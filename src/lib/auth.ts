@@ -4,7 +4,7 @@ import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import LoginAttempt from "@/models/LoginAttempt";
 import { loginSchema } from "@/lib/validations";
-import { checkIpRateLimit } from "@/lib/rate-limit";
+// import { checkIpRateLimit } from "@/lib/rate-limit";
 import { getDeviceHash, comparePassword, sanitizeUser } from "@/lib/auth-helpers";
 
 export const authOptions: NextAuthOptions = {
@@ -30,10 +30,10 @@ export const authOptions: NextAuthOptions = {
         const ip = (req?.headers?.['x-forwarded-for'] as string) || '0.0.0.0';
         const userAgent = (req?.headers?.['user-agent'] as string) || 'unknown';
 
-        const rateLimit = await checkIpRateLimit(ip);
-        if (rateLimit.limited) {
-          throw new Error("Too many login attempts from this IP. Try again in 15 minutes.");
-        }
+        // const rateLimit = await checkIpRateLimit(ip);
+        // if (rateLimit.limited) {
+        //   throw new Error("Too many login attempts from this IP. Try again in 15 minutes.");
+        // }
 
         // STEP 3 - Find user
         await dbConnect();
@@ -96,6 +96,7 @@ export const authOptions: NextAuthOptions = {
         token.id = (user as any)._id || (user as any).id;
         token.role = (user as any).role;
         token.status = (user as any).status;
+        token.agencyId = (user as any).agencyId;
         token.designation = (user as any).designation;
         token.passwordChangedAt = (user as any).passwordChangedAt ? new Date((user as any).passwordChangedAt).getTime() : undefined;
         token.lastStatusCheck = Date.now();
@@ -141,6 +142,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id;
         session.user.role = token.role;
         session.user.status = token.status;
+        session.user.agencyId = token.agencyId;
         session.user.designation = token.designation;
       }
       return session;

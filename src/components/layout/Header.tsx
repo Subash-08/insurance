@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Menu, Bell, User as UserIcon, Settings, LogOut, Check } from 'lucide-react';
+import { Menu, User as UserIcon, Settings, LogOut } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import Breadcrumb from './Breadcrumb';
 import OwnerOnly from './OwnerOnly';
+import NotificationBell from './NotificationBell';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header({ setIsSidebarOpen }: { setIsSidebarOpen: (b: boolean) => void }) {
   const { data: session } = useSession();
@@ -17,7 +19,7 @@ export default function Header({ setIsSidebarOpen }: { setIsSidebarOpen: (b: boo
 
   return (
     <header className="h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 sm:px-6 z-10 shrink-0">
-      
+
       {/* Left side */}
       <div className="flex items-center flex-1">
         <button
@@ -26,7 +28,7 @@ export default function Header({ setIsSidebarOpen }: { setIsSidebarOpen: (b: boo
         >
           <Menu size={24} />
         </button>
-        
+
         <div className="hidden sm:block">
           <Breadcrumb />
         </div>
@@ -34,21 +36,18 @@ export default function Header({ setIsSidebarOpen }: { setIsSidebarOpen: (b: boo
 
       {/* Right side */}
       <div className="flex items-center space-x-4">
-        
+
+        {/* Theme Toggle */}
+        <ThemeToggle />
+
         {/* Notifications */}
-        <button className="text-gray-400 hover:text-gray-500 relative p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-primary">
-          <Bell size={20} />
-          {/* Unread badge */}
-          <span className="absolute top-0 right-0 block h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
-            3
-          </span>
-        </button>
+        <NotificationBell />
 
         <div className="h-6 w-px bg-gray-200 dark:bg-gray-800" aria-hidden="true" />
 
         {/* User Dropdown */}
         <div className="relative">
-          <button 
+          <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
             onBlur={() => setTimeout(() => setDropdownOpen(false), 200)}
             className="flex items-center focus:outline-none"
@@ -65,7 +64,7 @@ export default function Header({ setIsSidebarOpen }: { setIsSidebarOpen: (b: boo
 
           {dropdownOpen && (
             <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 dark:divide-gray-700 z-50">
-              
+
               <div className="px-4 py-3">
                 <p className="text-sm text-gray-900 dark:text-white">Signed in as</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{session?.user?.email}</p>
@@ -90,7 +89,7 @@ export default function Header({ setIsSidebarOpen }: { setIsSidebarOpen: (b: boo
               <OwnerOnly>
                 <div className="py-1">
                   <Link href="/settings/team" className="group flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <UsersIconPlaceholder size={16} className="mr-3 text-gray-400 group-hover:text-gray-500" />
+                    <UsersIconPlaceholder size={2} className="mr-3 text-gray-400 group-hover:text-gray-500" />
                     Team Management
                   </Link>
                   <Link href="/settings/agency" className="group flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">

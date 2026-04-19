@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Edit2, Shield, Calendar, CreditCard, Activity, Tag, Trash2, Repeat, Clock, HelpCircle, XCircle } from 'lucide-react';
 import StatusBadge from '@/components/shared/StatusBadge';
 import CurrencyDisplay from '@/components/shared/CurrencyDisplay';
+import DocumentUploadModal from '@/components/documents/DocumentUploadModal';
 import ClaimHelplineButton from '@/components/shared/ClaimHelplineButton';
 import { AgentLabel } from '@/components/shared/HealthScoreBadge';
 
@@ -22,6 +23,10 @@ export default function PolicyDetailClient({ policyId, userRole, userId }: Polic
   const [premiums, setPremiums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'claims' | 'documents'>('overview');
+  const [documents, setDocuments] = useState<any[]>([]);
+  const [missingDocsData, setMissingDocsData] = useState<any>(null);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const fetchPolicyData = useCallback(async () => {
     try {
@@ -47,9 +52,33 @@ export default function PolicyDetailClient({ policyId, userRole, userId }: Polic
     }
   }, [policyId, router]);
 
+  const fetchDocsAndMissing = useCallback(async () => {
+    if (activeTab !== 'documents') return;
+    setLoadingDocs(true);
+    try {
+      const [docsRes, missingRes] = await Promise.all([
+        fetch(`/api/documents?entityType=Policy&entityId=${policyId}`),
+        fetch(`/api/documents/missing-check/${policyId}`)
+      ]);
+      const docsData = await docsRes.json();
+      const missingData = await missingRes.json();
+      
+      if (docsData.success) setDocuments(docsData.data);
+      if (missingData.success) setMissingDocsData(missingData.data);
+    } catch {
+      toast.error('Failed to load documents');
+    } finally {
+      setLoadingDocs(false);
+    }
+  }, [policyId, activeTab]);
+
   useEffect(() => {
     fetchPolicyData();
   }, [fetchPolicyData]);
+
+  useEffect(() => {
+    fetchDocsAndMissing();
+  }, [fetchDocsAndMissing]);
 
   const handleLapse = async () => {
     const reason = prompt('Please enter the reason for lapsing this policy:');
@@ -251,7 +280,95 @@ export default function PolicyDetailClient({ policyId, userRole, userId }: Polic
         )}
 
         {activeTab === 'claims' && <div className="text-center py-20 text-gray-400">Claims module coming soon.</div>}
-        {activeTab === 'documents' && <div className="text-center py-20 text-gray-400">Documents repository coming soon.</div>}
+        {activeTab === 'documents' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+             <div className="lg:col-span-2 space-y-6">
+                <div className="flex justify-between items-center bg-gray-50 dark:bg-gray-900 border border-border p-4 rounded-xl shadow-sm">
+                   <div>
+                      <h3 className="font-semibold text-gray-900 dark:text-white">Uploaded Documents</h3>
+                      <p className="text-sm text-gray-500">Manage required files for this policy.</p>
+                   </div>
+                   <button 
+                     onClick={() => setIsUploadModalOpen(true)}
+                     className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded shadow-sm text-sm font-medium transition"
+                   >
+                      Upload Document
+                   </button>
+                </div>
+                
+                <DocumentUploadModal 
+                  isOpen={isUploadModalOpen} 
+                  onClose={() => setIsUploadModalOpen(false)} 
+                  entityType="Policy" 
+                  entityId={policyId} 
+                  onUploadSuccess={fetchDocsAndMissing} 
+                />
+                
+                {loadingDocs ? (
+                  <div className="text-center py-12 text-gray-500">Loading documents...</div>
+                ) : documents.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl text-gray-500 bg-gray-50 dark:bg-gray-800/50">
+                     <p>No documents uploaded yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     {documents.map(doc => (
+                        <div key={doc._id} className="border border-border rounded-xl p-4 flex flex-col justify-between bg-white dark:bg-gray-800 shadow-sm relative group">
+                           <div>
+                              <div className="flex items-start justify-between mb-2">
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate pr-2">{doc.fileName}</h4>
+                                <span className="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{doc.documentType}</span>
+                              </div>
+                              <p className="text-xs text-gray-500 font-medium">Added: {new Date(doc.createdAt).toLocaleDateString()}</p>
+                              <p className="text-xs text-gray-500 font-medium">Size: {(doc.sizeBytes / 1024 / 1024).toFixed(2)} MB</p>
+                           </div>
+                           <div className="mt-4 flex gap-2">
+                              <a href={doc.cloudinaryUrl} target="_blank" rel="noreferrer" className="flex-1 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-center py-2 rounded text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                                 Open File
+                              </a>
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+                )}
+             </div>
+
+             <div className="space-y-4">
+                <div className="bg-gray-50 dark:bg-gray-900 border border-border rounded-xl p-5 shadow-sm">
+                   <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                      <HelpCircle size={18} className="text-primary" /> Requirement Checklist
+                   </h3>
+                   <p className="text-xs text-gray-500 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+                      Based on policy type: <span className="font-semibold text-gray-700 dark:text-gray-300 uppercase">{missingDocsData?.logicalType || '...'}</span>
+                   </p>
+                   
+                   {loadingDocs || !missingDocsData ? (
+                      <div className="text-center py-4 text-xs text-gray-400">Analyzing schema...</div>
+                   ) : missingDocsData?.isComplete ? (
+                      <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg text-sm flex items-start gap-2 border border-green-100 dark:border-green-800">
+                         <Shield size={16} className="mt-0.5" />
+                         <div>
+                            <p className="font-bold">Fully Compliant</p>
+                            <p className="text-xs mt-0.5">All mandatory document types have been uploaded.</p>
+                         </div>
+                      </div>
+                   ) : (
+                      <div>
+                         <p className="text-sm font-semibold text-amber-600 mb-2">Missing Mandatory Documents:</p>
+                         <ul className="space-y-2">
+                            {missingDocsData.missing.map((req: string) => (
+                               <li key={req} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 p-2 rounded border border-gray-100 dark:border-gray-700">
+                                  <XCircle size={16} className="text-red-500 shrink-0" />
+                                  <span className="capitalize">{req.replace('_', ' ')}</span>
+                               </li>
+                            ))}
+                         </ul>
+                      </div>
+                   )}
+                </div>
+             </div>
+          </div>
+        )}
       </div>
     </div>
   );

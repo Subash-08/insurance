@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import EmptyState from '@/components/shared/EmptyState';
+import LeadWizard from '@/components/leads/LeadWizard';
 
 export default function AddLeadPage() {
   return (
@@ -14,8 +14,8 @@ export default function AddLeadPage() {
         </Link>
       </div>
       
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-border shadow-sm p-8 flex items-center justify-center">
-         <EmptyState title="No content yet" description="This module is under construction." />
+      <div className="bg-transparent">
+         <LeadWizard />
       </div>
     </div>
   );

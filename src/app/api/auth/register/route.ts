@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       await AuditLog.create({
         userId: user._id,
         action: 'Registered',
-        module: 'Auth',
+        entity: 'Auth',
         details: isFirstUser ? 'First user — registered as owner' : 'Self-registration submitted, pending approval'
       });
     } catch (e) {
